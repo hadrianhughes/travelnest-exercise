@@ -1,5 +1,13 @@
 import puppeteer, { ElementHandle, Page } from 'puppeteer';
 
+type PropertyInfo = {
+  name: string;
+  type: string;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+};
+
 const AIRBNB_URL = 'https://www.airbnb.co.uk/rooms/';
 
 const getName = async (node: ElementHandle): Promise<string> => node.evaluate(el => el.textContent);
@@ -11,16 +19,20 @@ const getType = async (node: ElementHandle): Promise<string | null> => {
   return text;
 };
 
-const getBedrooms = async (node: ElementHandle): Promise<number | null> => {
+const getBedroomsAndBathrooms = async (node: ElementHandle): Promise<{
+  bedrooms: number | null;
+  bathrooms: number | null;
+}> => {
   const detailsNode =  await node.waitForSelector('ol');
   const detailsText = await detailsNode?.evaluate(el => el.textContent);
 
-  const match = detailsText.match(/(\d+) bedrooms?/);
-  if (!match) {
-    return null;
-  }
+  const bedrooms = detailsText.match(/(\d+) bedrooms?/);
+  const bathrooms = detailsText.match(/(\d+) bathrooms?/);
 
-  return parseInt(match[1]);
+  return {
+    bedrooms: bedrooms ? parseInt(bedrooms[1]) : null,
+    bathrooms: bathrooms ? parseInt(bathrooms[1]) : null,
+  };
 };
 
 const getAmenities = async (page: Page): Promise<string[] | null> => {
@@ -44,7 +56,7 @@ const getAmenities = async (page: Page): Promise<string[] | null> => {
   return amenities;
 };
 
-export const getPropertyInfo = async (id: string) => {
+export const getPropertyInfo = async (id: string): Promise<PropertyInfo> => {
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
 
@@ -60,12 +72,24 @@ export const getPropertyInfo = async (id: string) => {
     throw new Error(`could not find complete details for property: ${id}`);
   }
 
-  const [name, type, bedrooms, amenities] = await Promise.all([
+  const [name, type, { bedrooms, bathrooms }, amenities] = await Promise.all([
     getName(nameNode),
     getType(overviewNode),
-    getBedrooms(overviewNode),
+    getBedroomsAndBathrooms(overviewNode),
     getAmenities(page),
   ]);
 
-  console.log(name, type, bedrooms, amenities);
+  if (!(type && bedrooms && bathrooms && amenities)) {
+    throw new Error(`could not find complete details for property: ${id}`);
+  }
+
+  await browser.close();
+
+  return {
+    name,
+    type,
+    bedrooms,
+    bathrooms,
+    amenities,
+  };
 };

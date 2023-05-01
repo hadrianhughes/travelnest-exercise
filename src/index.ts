@@ -1,13 +1,5 @@
 import { getPropertyInfo } from './dom';
 
-type PropertyInfo = {
-  name: string;
-  type: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-};
-
 const getAirbnbID = (): string => {
   const flagIdx = process.argv.indexOf('--id');
   const id = process.argv[flagIdx + 1];
@@ -19,5 +11,10 @@ const getAirbnbID = (): string => {
   return id;
 };
 
-const id = getAirbnbID();
-getPropertyInfo(id);
+const run = async () => {
+  const id = getAirbnbID();
+  const info = await getPropertyInfo(id);
+  console.log(info);
+};
+
+run();
