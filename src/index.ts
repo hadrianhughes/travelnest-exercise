@@ -1,4 +1,4 @@
-import { getPropertyInfo } from './dom';
+import { getPropertyInfo, PropertyInfo } from './dom';
 
 const getAirbnbID = (): string => {
   const flagIdx = process.argv.indexOf('--id');
@@ -11,10 +11,21 @@ const getAirbnbID = (): string => {
   return id;
 };
 
+const printInformation = (info: PropertyInfo) => {
+  const name = `Name:\t\t${info.name}`;
+  const type = `Type:\t\t${info.type}`;
+  const bedrooms = `Bedrooms:\t${info.bedrooms}`;
+  const bathrooms = `Bathrooms:\t${info.bathrooms}`;
+  const amenities = `Amenities:\t${info.amenities.map(a => `${a}`).join('\n\t\t')}`;
+
+  const output = [name, type, bedrooms, bathrooms, amenities].join('\n');
+  console.info(output);
+};
+
 const run = async () => {
   const id = getAirbnbID();
   const info = await getPropertyInfo(id);
-  console.log(info);
+  printInformation(info);
 };
 
 run();

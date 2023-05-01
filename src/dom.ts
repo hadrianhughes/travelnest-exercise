@@ -1,6 +1,6 @@
 import puppeteer, { ElementHandle, Page } from 'puppeteer';
 
-type PropertyInfo = {
+export type PropertyInfo = {
   name: string;
   type: string;
   bedrooms: number;
