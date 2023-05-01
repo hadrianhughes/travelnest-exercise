@@ -5,6 +5,17 @@ A Typescript command line tool for scraping key information from properties on A
 This is for a pre-interview exercise for Travelnest.
 
 
+## Usage
+
+To run this, you must be using Node.js **lts-gallium or above**.
+
+1. Install dependencies: `npm i`
+2. Build from source: `npm run build`
+3. Run the bundled output: `node ./build/index.js --id {airbnb id}`
+
+**Example:** `node ./build/index.js --id 20669368`
+
+
 ## Still to do
 
 - [x] Scrape web page of static URLs
