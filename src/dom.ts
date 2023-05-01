@@ -23,6 +23,27 @@ const getBedrooms = async (node: ElementHandle): Promise<number | null> => {
   return parseInt(match[1]);
 };
 
+const getAmenities = async (page: Page): Promise<string[] | null> => {
+  const amenitiesNode = await page.waitForSelector('[data-section-id="AMENITIES_DEFAULT"]');
+  if (!amenitiesNode) {
+    return null;
+  }
+
+  const showAllButton = await amenitiesNode?.waitForSelector('button');
+  if (!showAllButton) {
+    return null;
+  }
+
+  await showAllButton.click();
+
+  const dialogNode = await page.waitForSelector('[data-testid="modal-container"] section div:last-child');
+  const dialogDivs = await dialogNode?.$$('& > div');
+  const amenitiesEls = dialogDivs ? await Promise.all(dialogDivs?.flatMap(div => div.$$('& > div:not(:first-child)'))) : null;
+  const amenities = amenitiesEls ? await Promise.all(amenitiesEls.flat().map(a => a.evaluate(el => el.textContent))) : null;
+
+  return amenities;
+};
+
 export const getPropertyInfo = async (id: string) => {
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
@@ -30,17 +51,21 @@ export const getPropertyInfo = async (id: string) => {
   await page.goto(AIRBNB_URL + id);
   await page.setViewport({ width: 1080, height: 1024 });
 
-  const [nameNode, overviewNode, amenitiesNode] = await Promise.all([
+  const [nameNode, overviewNode] = await Promise.all([
     page.waitForSelector('[data-section-id="TITLE_DEFAULT"] h1'),
     page.waitForSelector('[data-section-id="OVERVIEW_DEFAULT"]'),
-    page.waitForSelector('[data-section-id="AMENITIES_DEFAULT"]'),
   ]);
 
-  if (!(nameNode && overviewNode && amenitiesNode)) {
+  if (!(nameNode && overviewNode)) {
     throw new Error(`could not find complete details for property: ${id}`);
   }
 
-  const [name, type, bedrooms] = await Promise.all([getName(nameNode), getType(overviewNode), getBedrooms(overviewNode)]);
+  const [name, type, bedrooms, amenities] = await Promise.all([
+    getName(nameNode),
+    getType(overviewNode),
+    getBedrooms(overviewNode),
+    getAmenities(page),
+  ]);
 
-  console.log(name, type, bedrooms);
+  console.log(name, type, bedrooms, amenities);
 };
