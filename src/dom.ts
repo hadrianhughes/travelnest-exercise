@@ -53,7 +53,7 @@ const getAmenities = async (page: Page): Promise<string[] | null> => {
   await showAllButton.click();
 
   const dialogNode = await page.waitForSelector('[data-testid="modal-container"] section div:last-child');
-  const dialogDivs = await dialogNode?.$$('& > div');
+  const dialogDivs = await dialogNode?.$$('& > div:not(:last-child)');
   const amenitiesEls = dialogDivs ? await Promise.all(dialogDivs?.flatMap(div => div.$$('& > div:not(:first-child)'))) : null;
   const amenities = amenitiesEls ? await Promise.all(amenitiesEls.flat().map(a => a.evaluate(el => el.textContent))) : null;
 
