@@ -64,7 +64,19 @@ export const getPropertyInfo = async (id: string): Promise<PropertyInfo> => {
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
 
-  await page.goto(AIRBNB_URL + id);
+  const response = await page.goto(AIRBNB_URL + id);
+  if (!response?.ok()) {
+    const status = response?.status();
+
+    switch (status) {
+      case 410:
+      case 404:
+        throw new Error(`could not find Airbnb property with ID: ${id}`);
+      default:
+        throw new Error(`received an error from Airbnb: ${response?.status()}: ${response?.statusText}`);
+    }
+  }
+
   await page.setViewport({ width: 1080, height: 1024 });
 
   const [nameNode, overviewNode] = await Promise.all([
