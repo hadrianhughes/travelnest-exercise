@@ -15,8 +15,12 @@ const getName = async (node: ElementHandle): Promise<string> => node.evaluate(el
 const getType = async (node: ElementHandle): Promise<string | null> => {
   const typeNode = await node.waitForSelector('h2');
   const text = await typeNode?.evaluate(el => el.textContent);
+  if (!text) {
+    return null;
+  }
 
-  return text;
+  const type = text.match(/^(.+)[\s\t]hosted[\s\t]by[\s\t].+$/);
+  return type ? type[1] : text;
 };
 
 const getBedroomsAndBathrooms = async (node: ElementHandle): Promise<{
